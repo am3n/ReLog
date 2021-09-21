@@ -1,22 +1,11 @@
-plugins {
-    id 'com.android.library'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
-    id 'kotlin-android-extensions'
-    id 'maven-publish'
-}
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'maven-publish'
+apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.github.am3n'
-
-/*project.afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-            }
-        }
-    }
-}*/
 
 android {
 
@@ -29,16 +18,20 @@ android {
     }
 
     buildTypes {
-
+        release {
+            debuggable false
+            useProguard false
+            minifyEnabled false
+        }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
     androidExtensions {
@@ -57,10 +50,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines"
 
     /** am3n */
-    implementation('com.github.am3n:NeedTool:1.5.3') {
-        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
-        exclude group: 'com.squareup.okhttp3', module: 'logging-interceptor'
-    }
+    implementation 'com.github.am3n:NeedTool:2.0.0'
 
     /** play services */
     implementation 'com.google.android.gms:play-services-ads:11.8.0'
