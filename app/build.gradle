@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-android-extensions'
+}
+
+android {
+
+    compileSdkVersion 31
+
+    defaultConfig {
+        applicationId "ir.am3n.relog.sample"
+        minSdkVersion 15
+        targetSdkVersion 31
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            debuggable false
+            shrinkResources false
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    androidExtensions {
+        experimental = true
+    }
+
+}
+
+dependencies {
+
+    implementation "androidx.appcompat:appcompat:$appcompat_version"
+    implementation "androidx.core:core-ktx:$android_core_ktx"
+    implementation "androidx.constraintlayout:constraintlayout:$constraintlayout"
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
+
+    implementation project(path: ':relog')
+
+}

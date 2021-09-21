@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!--<domain-config cleartextTrafficPermitted="true"
+        tools:ignore="NetworkSecurityConfig">
+        <domain includeSubdomains="true">192.168.2.1</domain>
+    </domain-config>-->
+
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+</network-security-config>
