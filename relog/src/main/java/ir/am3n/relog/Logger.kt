@@ -88,7 +88,7 @@ internal class Logger(context: Context?) {
     private fun push() {
         Thread {
             try {
-                database!!.logDao()!!.all!!.let { logs ->
+                database!!.logDao()!!.chunk!!.let { logs ->
                     if (logs.isNotEmpty()) {
                         //d("Relog", "Logger > push()")
                         val logsCanPush = logs.filter { canLog(it.type) }
@@ -97,7 +97,10 @@ internal class Logger(context: Context?) {
                             override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                                 if (response.isSuccessful) {
                                     try {
-                                        response.body()?.string()?.isJsonObj()?.let { json ->
+                                        val r = response.body()?.string()
+                                        if (BuildConfig.DEBUG)
+                                            android.util.Log.d("Relog", r.toString())
+                                        r?.isJsonObj()?.let { json ->
                                             if (json.optString("status") == "ok") {
                                                 pushTimeout--
                                                 if (pushTimeout < 2) pushTimeout = 2
@@ -120,6 +123,8 @@ internal class Logger(context: Context?) {
                             }
                             override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
                                 pushing = false
+                                if (BuildConfig.DEBUG)
+                                    t.printStackTrace()
                                 //d("Relog", "Logger > push() > failed")
                                 //t.printStackTrace()
                             }
