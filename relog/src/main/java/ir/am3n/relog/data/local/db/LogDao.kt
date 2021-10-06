@@ -6,7 +6,7 @@ import ir.am3n.needtool.db.BaseDao
 @Dao
 abstract class LogDao : BaseDao<Log>() {
 
-    @get:Query("SELECT * FROM Log LIMIT 500")
+    @get:Query("SELECT * FROM Log LIMIT 250")
     abstract val chunk: List<Log>?
 
 }
