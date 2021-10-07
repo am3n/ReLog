@@ -42,6 +42,7 @@ class Client(
     private var nsr: NetworkStateReceiver? = null
     private var helloing = false
     private var helloSucc: Boolean = false
+    private var helloTryedFailed = 0
 
     init {
 
@@ -74,16 +75,22 @@ class Client(
 
     }
 
-    internal fun hello(tryed: Int = 0) {
+    internal fun hello() {
 
-        if (helloing)
-            return
+        if (helloing) return
         helloing = true
 
         if (nsr?.state != NetworkStateReceiver.State.AVAILABLE) {
             helloing = false
             return
         }
+
+        offUI(hello)
+        onUI(hello, 1500)
+
+    }
+
+    private val hello = Runnable {
 
         if (RL.logging) Log.d("Relog", "try hello to server")
 
@@ -108,6 +115,7 @@ class Client(
                                     if (id > 0) {
                                         if (RL.logging) Log.d("Relog", "hello succeed")
                                         helloSucc = true
+                                        helloTryedFailed = 0
                                         callback?.invoke()
                                         callback = null
                                         onIO(5 * 60 * 1000) { hello() }
@@ -125,11 +133,13 @@ class Client(
             }
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 helloing = false
+                helloTryedFailed++
                 if (RL.logging) {
                     Log.e("Relog", "hello failed", t)
                 }
-                if (nsr?.state == NetworkStateReceiver.State.AVAILABLE)
-                    onIO((if (tryed<3) 2 else 10) * 1000) { hello(tryed+1) }
+                onIO((if (helloTryedFailed < 3) 2 else 10) * 1000) {
+                    hello()
+                }
             }
         })
     }

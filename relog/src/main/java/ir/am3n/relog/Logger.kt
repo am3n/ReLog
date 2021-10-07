@@ -2,9 +2,7 @@ package ir.am3n.relog
 
 import android.content.Context
 import androidx.room.Room
-import ir.am3n.needtool.isJsonObj
-import ir.am3n.needtool.onIO
-import ir.am3n.needtool.sh
+import ir.am3n.needtool.*
 import ir.am3n.relog.data.local.db.Log
 import ir.am3n.relog.data.local.db.LogDatabase
 import ir.am3n.relog.data.remote.PushRequest
@@ -22,6 +20,7 @@ internal class Logger(context: Context?) {
 
     private var database: LogDatabase? = null
     private var pushing = false
+    private var lastPush = 0L
     private var indivTypeFilter: Byte = 0
     private var typeFilter: Byte = 0
     private var filterOperator: String = "and"
@@ -63,7 +62,6 @@ internal class Logger(context: Context?) {
 
         database = Room.databaseBuilder(context, LogDatabase::class.java, "RelogDatabase").build()
 
-        var time = 0L
         GlobalScope.launch {
             channel.consumeEach { log ->
                 try {
@@ -71,13 +69,13 @@ internal class Logger(context: Context?) {
                     database!!.logDao()!!.insertAsync(log)
                     if (RL.logging) android.util.Log.d("Relog", "collect log & insert")
 
-                    if (System.currentTimeMillis() - time > 2 * 1000) {
-                        time = System.currentTimeMillis()
-                        if (!pushing && RL.canPush()) {
-                            pushing = true
-                            push()
-                        }
+                    val now = System.currentTimeMillis()
+                    if (now - lastPush > 5 * 1000) {
+                        push.run()
                     }
+
+                    offUI(push)
+                    onUI(push, 500)
 
                 } catch (t: Throwable) {
                     if (RL.logging) android.util.Log.e("Relog", "", t)
@@ -85,6 +83,13 @@ internal class Logger(context: Context?) {
             }
         }
 
+    }
+
+    private val push = java.lang.Runnable {
+        if (!pushing && RL.canPush()) {
+            pushing = true
+            push()
+        }
     }
 
     private fun push() {
@@ -98,6 +103,7 @@ internal class Logger(context: Context?) {
                         if (RL.logging) android.util.Log.d("Relog", "pushing logs size=${body.logs?.size}")
                         Relog.api.push(RL.appKey, body).enqueue(object : Callback<ResponseBody?> {
                             override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+                                lastPush = System.currentTimeMillis()
                                 if (response.isSuccessful) {
                                     try {
                                         val r = response.body()?.string()
@@ -128,11 +134,13 @@ internal class Logger(context: Context?) {
                                 onFailure(call, Exception(response.errorBody()?.toString()))
                             }
                             override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
+                                lastPush = System.currentTimeMillis()
                                 pushing = false
                                 if (RL.logging) android.util.Log.e("Relog", "", t)
                             }
                         })
                     } else {
+                        lastPush = System.currentTimeMillis()
                         pushing = false
                         pushTimeout++
                         if (pushTimeout > 15) pushTimeout = 15
@@ -141,6 +149,7 @@ internal class Logger(context: Context?) {
                     return@let
                 }
             } catch (t: Throwable) {
+                lastPush = System.currentTimeMillis()
                 pushing = false
                 if (RL.logging) android.util.Log.e("Relog", "", t)
             }
