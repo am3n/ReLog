@@ -50,7 +50,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines"
 
     /** am3n */
-    implementation 'com.github.am3n:NeedTool:2.0.0'
+    implementation 'com.github.am3n:NeedTool:2.0.2'
 
     /** play services */
     implementation 'com.google.android.gms:play-services-ads:11.8.0'
