@@ -21,6 +21,7 @@ class RL {
         internal var appVersionName: String? = null
         internal var osVersion: String? = null
         internal var debug: Boolean = true
+        internal var logging: Boolean = false
 
         var firebaseToken: String = ""
             get() {
@@ -53,7 +54,7 @@ class RL {
             }
 
 
-        fun init(context: Context?, url: String, appKey: String) {
+        fun init(context: Context?, url: String, appKey: String, logging: Boolean = false) {
 
             this.context = context
             val device = context?.device()
@@ -66,6 +67,10 @@ class RL {
             this.osVersion = device?.get("osVersion") ?:""
             this.debug = context?.isDebug() ?:true
 
+            this.logging = logging
+
+            logger?.stop()
+            client?.stop()
             logger = Logger(context)
             client = Client(context, device) {
                 logger?.start(context)
@@ -74,7 +79,7 @@ class RL {
         }
 
         internal fun canPush(): Boolean {
-            return client?.canPush() == true
+            return client?.canPush() ?: false
         }
 
         internal val cid: Long? get() = client?.id

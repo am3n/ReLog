@@ -53,10 +53,12 @@ class Client(
                 if (clientId.isEmpty()) {
                     clientId = getUniqueId()
                 }
+                if (RL.logging) Log.d("Relog", "clientId=$clientId")
             }
         }
 
         onIO {
+            try { nsr?.stop() } catch (t: Throwable) {}
             nsr = NetworkStateReceiver(context, listener = object : NetworkStateReceiver.Listener {
                 override fun onChanged(state: NetworkStateReceiver.State, network: Network?) {
                     if (state == NetworkStateReceiver.State.AVAILABLE)
@@ -83,6 +85,8 @@ class Client(
             return
         }
 
+        if (RL.logging) Log.d("Relog", "try hello to server")
+
         val body = HelloRequest(
             clientId,
             RL.firebaseToken,
@@ -102,10 +106,11 @@ class Client(
                                     RL.setConfig(data.optJSONObject("config"))
                                     id = data.optLong("cid")
                                     if (id > 0) {
+                                        if (RL.logging) Log.d("Relog", "hello succeed")
                                         helloSucc = true
                                         callback?.invoke()
                                         callback = null
-                                        onIO(60 * 1000) { hello() }
+                                        onIO(5 * 60 * 1000) { hello() }
                                         return
                                     }
                                 }
@@ -120,11 +125,21 @@ class Client(
             }
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 helloing = false
-                //t.printStackTrace()
+                if (RL.logging) {
+                    Log.e("Relog", "hello failed", t)
+                }
                 if (nsr?.state == NetworkStateReceiver.State.AVAILABLE)
                     onIO((if (tryed<3) 2 else 10) * 1000) { hello(tryed+1) }
             }
         })
+    }
+
+    internal fun stop() {
+        try {
+            nsr?.stop()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
     }
 
     fun canPush(): Boolean {

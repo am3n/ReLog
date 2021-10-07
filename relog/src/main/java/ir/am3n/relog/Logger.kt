@@ -16,7 +16,6 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.lang.Thread.sleep
 import kotlin.experimental.and
 
 internal class Logger(context: Context?) {
@@ -27,7 +26,7 @@ internal class Logger(context: Context?) {
     private var typeFilter: Byte = 0
     private var filterOperator: String = "and"
     private var keepLogs: Int = 30
-    private var pushTimeout: Int = 2
+    private var pushTimeout: Int = 2 // seconds
 
     private var channel = Channel<Log>()
 
@@ -64,55 +63,62 @@ internal class Logger(context: Context?) {
 
         database = Room.databaseBuilder(context, LogDatabase::class.java, "RelogDatabase").build()
 
+        var time = 0L
         GlobalScope.launch {
             channel.consumeEach { log ->
-                //d("Relog", "Logger > start() > collect")
-                database?.logDao()?.insert(log)
-                //d("Relog", "Logger > start() > inserted")
+                try {
+
+                    database!!.logDao()!!.insertAsync(log)
+                    if (RL.logging) android.util.Log.d("Relog", "collect log & insert")
+
+                    if (System.currentTimeMillis() - time > 2 * 1000) {
+                        time = System.currentTimeMillis()
+                        if (!pushing && RL.canPush()) {
+                            pushing = true
+                            push()
+                        }
+                    }
+
+                } catch (t: Throwable) {
+                    if (RL.logging) android.util.Log.e("Relog", "", t)
+                }
             }
         }
 
-        Thread {
-            while (true) {
-                try {
-                    try { sleep(pushTimeout * 1000L) } catch (t: Throwable) {}
-                    if (!pushing && RL.canPush()) {
-                        pushing = true
-                        push()
-                    }
-                } catch (t: Throwable) {}
-            }
-        }.start()
     }
 
     private fun push() {
-        Thread {
+        onIO {
             try {
                 database!!.logDao()!!.chunk!!.let { logs ->
                     if (logs.isNotEmpty()) {
-                        //d("Relog", "Logger > push()")
+                        if (RL.logging) android.util.Log.d("Relog", "chunk logs size=${logs.size}")
                         val logsCanPush = logs.filter { canLog(it.type) }
                         val body = PushRequest(RL.cid, logsCanPush)
+                        if (RL.logging) android.util.Log.d("Relog", "pushing logs size=${body.logs?.size}")
                         Relog.api.push(RL.appKey, body).enqueue(object : Callback<ResponseBody?> {
                             override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                                 if (response.isSuccessful) {
                                     try {
                                         val r = response.body()?.string()
-                                        if (BuildConfig.DEBUG)
-                                            android.util.Log.d("Relog", r.toString())
                                         r?.isJsonObj()?.let { json ->
                                             if (json.optString("status") == "ok") {
                                                 pushTimeout--
                                                 if (pushTimeout < 2) pushTimeout = 2
                                                 if (pushTimeout > 4) pushTimeout = 4
-                                                //d("Relog", "Logger > push() > ok")
                                                 onIO {
-                                                    database?.logDao()?.delete(logs)
-                                                    pushing = false
+                                                    try {
+                                                        database!!.logDao()!!.delete(logs)
+                                                        pushing = false
+                                                        if (RL.logging) android.util.Log.d("Relog", "push succeed")
+                                                    } catch (t: Throwable) {
+                                                        if (RL.logging) android.util.Log.e("Relog", "", t)
+                                                    }
                                                 }
                                                 return
                                             }
                                         }
+                                        if (RL.logging) android.util.Log.d("Relog", "push failed with response: $r")
                                     } catch (t: Throwable) {
                                         pushing = false
                                         onFailure(call, t)
@@ -123,24 +129,22 @@ internal class Logger(context: Context?) {
                             }
                             override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
                                 pushing = false
-                                if (BuildConfig.DEBUG)
-                                    t.printStackTrace()
-                                //d("Relog", "Logger > push() > failed")
-                                //t.printStackTrace()
+                                if (RL.logging) android.util.Log.e("Relog", "", t)
                             }
                         })
                     } else {
                         pushing = false
                         pushTimeout++
                         if (pushTimeout > 15) pushTimeout = 15
-                        //d("Relog", "Logger > push() > is empty")
+                        if (RL.logging) android.util.Log.d("Relog", "there is no logs")
                     }
                     return@let
                 }
             } catch (t: Throwable) {
                 pushing = false
+                if (RL.logging) android.util.Log.e("Relog", "", t)
             }
-        }.start()
+        }
     }
 
     internal fun log(timestamp: String, type: Type, tag: String, message: String) {
@@ -158,12 +162,24 @@ internal class Logger(context: Context?) {
                         message
                     )
                 )
-                //d("Relog", "Logger > log() > send to flow")
             }
         }
     }
 
-    fun canLog(type: Type?): Boolean {
+    internal fun stop() {
+        try {
+            channel.close()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+        try {
+            database?.close()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+    }
+
+    private fun canLog(type: Type?): Boolean {
         return (
             (filterOperator == "and" && (checkTypeFilter(type) && checkIndivTypeFilter(type)))
             ||

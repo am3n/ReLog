@@ -23,12 +23,12 @@ class AdvertisingInfo(private val context: Context?) {
                     aic!!.finish()
                     return@withContext adIdInfo.id
                 } catch (t: Throwable) {
-                    //t.printStackTrace()
+                    if (RL.logging) android.util.Log.e("Relog", "", t)
                 }
                 return@withContext null
             }
         } catch (t: Throwable) {
-            //t.printStackTrace()
+            if (RL.logging) android.util.Log.e("Relog", "", t)
         }
         return null
     }
