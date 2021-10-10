@@ -17,13 +17,6 @@ class MainActivity : AppCompatActivity() {
             RL.v("MainAct", "log in verbose type")
             RL.w("MainAct", "log in warning type")
             RL.e("MainAct", "log in error type")
-            for (i in 0..2000) {
-                RL.d("MainAct", "log $i in debug type to test upload huge logs to the server cause error... " +
-                    "pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio " +
-                    "pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio " +
-                    "pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio " +
-                    "pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio pio ")
-            }
         }
 
     }

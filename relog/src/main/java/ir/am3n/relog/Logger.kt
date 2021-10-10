@@ -7,9 +7,10 @@ import ir.am3n.relog.data.local.db.Log
 import ir.am3n.relog.data.local.db.LogDatabase
 import ir.am3n.relog.data.remote.PushRequest
 import ir.am3n.relog.data.remote.Relog
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -70,7 +71,7 @@ internal class Logger(context: Context?) {
                     if (RL.logging) android.util.Log.d("Relog", "collect log & insert")
 
                     val now = System.currentTimeMillis()
-                    if (now - lastPush > 5 * 1000) {
+                    if (now - lastPush > 10 * 1000) {
                         push.run()
                     }
 
