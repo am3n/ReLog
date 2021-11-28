@@ -14,19 +14,12 @@ class AdvertisingInfo(private val context: Context?) {
         aic = AdvertisingIdClient(context?.applicationContext)
     }
 
-    suspend fun getAdvertisingId(): String? {
+    fun getAdvertisingId(): String? {
         try {
-            withContext(Dispatchers.IO) {
-                try {
-                    aic!!.start()
-                    val adIdInfo = aic!!.info
-                    aic!!.finish()
-                    return@withContext adIdInfo.id
-                } catch (t: Throwable) {
-                    if (RL.logging) android.util.Log.e("Relog", "", t)
-                }
-                return@withContext null
-            }
+            aic!!.start()
+            val adIdInfo = aic!!.info
+            aic!!.finish()
+            return adIdInfo.id
         } catch (t: Throwable) {
             if (RL.logging) android.util.Log.e("Relog", "", t)
         }

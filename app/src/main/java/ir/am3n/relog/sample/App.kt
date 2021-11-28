@@ -8,7 +8,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        RL.init(this, "http://192.168.1.2:7000", "...")
+        RL.init(this, "http://192.168.1.2:7000", "...", true)
 
         RL.firebaseToken = "_fb_token_"
 

@@ -46,11 +46,9 @@ class Client(
 
     init {
 
-        CoroutineScope(Dispatchers.IO).launch {
+        onIO {
             AdvertisingInfo(context).run {
-                getAdvertisingId()?.let { adId ->
-                    clientId = adId
-                }
+                clientId = getAdvertisingId() ?: ""
                 if (clientId.isEmpty()) {
                     clientId = getUniqueId()
                 }
