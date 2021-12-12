@@ -12,7 +12,7 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 31
         multiDexEnabled true
     }
@@ -50,29 +50,15 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines"
 
     /** am3n */
-    implementation 'com.github.am3n:NeedTool:2.0.2'
-
-    /** play services */
-    implementation 'com.google.android.gms:play-services-ads:11.8.0'
-
+    implementation 'com.github.am3n:NeedTool:2.2.0'
 
     /** room */
     implementation 'androidx.room:room-ktx:2.3.0'
     kapt 'androidx.room:room-compiler:2.3.0'
 
-
     /** retrofit */
-    implementation("com.squareup.retrofit2:retrofit:2.9.0") {
-        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
-        exclude group: 'com.squareup.okhttp3', module: 'logging-interceptor'
-    }
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0") {
-        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
-        exclude group: 'com.squareup.okhttp3', module: 'logging-interceptor'
-    }
-    //noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
-    //noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:logging-interceptor:3.12.13'
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
 
 }

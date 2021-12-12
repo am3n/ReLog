@@ -67,7 +67,7 @@ internal class Logger(context: Context?) {
             channel.consumeEach { log ->
                 try {
 
-                    database!!.logDao()!!.insertAsync(log)
+                    database!!.logDao()!!.insert(log)
                     if (RL.logging) android.util.Log.d("Relog", "collect log & insert")
 
                     val now = System.currentTimeMillis()

@@ -23,6 +23,15 @@ class RL {
         internal var debug: Boolean = true
         internal var logging: Boolean = false
 
+        var clientId: String = ""
+            get() {
+                return context?.sh("relog")?.str("client_id") ?:""
+            }
+            set(value) {
+                field = value
+                context?.sh("relog")?.edit()?.putString("client_id", value)?.apply()
+            }
+
         var firebaseToken: String = ""
             get() {
                 return context?.sh("relog")?.str("firebase_token") ?:""

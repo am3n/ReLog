@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "ir.am3n.relog.sample"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 31
         multiDexEnabled true
     }

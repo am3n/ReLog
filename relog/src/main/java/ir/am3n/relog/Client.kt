@@ -7,9 +7,6 @@ import android.util.Log
 import ir.am3n.needtool.*
 import ir.am3n.relog.data.remote.HelloRequest
 import ir.am3n.relog.data.remote.Relog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -30,31 +27,12 @@ class Client(
             context?.sh("relog")?.edit()?.putLong("id", value)?.apply()
         }
 
-    private var clientId: String = ""
-        get() {
-            return context?.sh("relog")?.str("client_id") ?:""
-        }
-        set(value) {
-            field = value
-            context?.sh("relog")?.edit()?.putString("client_id", value)?.apply()
-        }
-
     private var nsr: NetworkStateReceiver? = null
     private var helloing = false
     private var helloSucc: Boolean = false
     private var helloTryedFailed = 0
 
     init {
-
-        onIO {
-            AdvertisingInfo(context).run {
-                clientId = getAdvertisingId() ?: ""
-                if (clientId.isEmpty()) {
-                    clientId = getUniqueId()
-                }
-                if (RL.logging) Log.d("Relog", "clientId=$clientId")
-            }
-        }
 
         onIO {
             try { nsr?.stop() } catch (t: Throwable) {}
@@ -93,7 +71,7 @@ class Client(
         if (RL.logging) Log.d("Relog", "try hello to server")
 
         val body = HelloRequest(
-            clientId,
+            RL.clientId,
             RL.firebaseToken,
             RL.identification,
             RL.extraInfo,
@@ -151,7 +129,7 @@ class Client(
     }
 
     fun canPush(): Boolean {
-        return helloSucc && id>0 && clientId.isNotEmpty() && nsr?.state==NetworkStateReceiver.State.AVAILABLE
+        return helloSucc && id>0 && RL.clientId.isNotEmpty() && nsr?.state==NetworkStateReceiver.State.AVAILABLE
     }
 
 }
