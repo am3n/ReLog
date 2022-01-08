@@ -14,13 +14,12 @@ import retrofit2.Response
 
 class Client(
     private var context: Context?,
-    private val device: HashMap<String, String>?,
-    private var callback: (() -> Unit)?
+    private val device: HashMap<String, String>?
 ) {
 
     var id: Long = 0
         get() {
-            return context?.sh("relog")?.getLong("id", 0) ?:0
+            return context?.sh("relog")?.getLong("id", 0) ?: 0
         }
         set(value) {
             field = value
@@ -35,17 +34,26 @@ class Client(
     init {
 
         onIO {
-            try { nsr?.stop() } catch (t: Throwable) {}
+            try {
+                nsr?.stop()
+            } catch (t: Throwable) {
+            }
             nsr = NetworkStateReceiver(context, listener = object : NetworkStateReceiver.Listener {
                 override fun onChanged(state: NetworkStateReceiver.State, network: Network?) {
                     if (state == NetworkStateReceiver.State.AVAILABLE)
                         hello()
                 }
+
                 override fun onChangedOnLowApi(state: NetworkStateReceiver.State) {
                     if (state == NetworkStateReceiver.State.AVAILABLE)
                         hello()
                 }
-                override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {}
+
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities
+                ) {
+                }
             })
         }
 
@@ -70,14 +78,7 @@ class Client(
 
         if (RL.logging) Log.d("Relog", "try hello to server")
 
-        val body = HelloRequest(
-            RL.clientId,
-            RL.firebaseToken,
-            RL.identification,
-            RL.extraInfo,
-            RL.debug,
-            device
-        )
+        val body = HelloRequest(RL.clientId, RL.firebaseToken, RL.identification, RL.extraInfo, RL.debug, device)
         Relog.api.hello(RL.appKey, body).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 helloing = false
@@ -92,8 +93,6 @@ class Client(
                                         if (RL.logging) Log.d("Relog", "hello succeed")
                                         helloSucc = true
                                         helloTryedFailed = 0
-                                        callback?.invoke()
-                                        callback = null
                                         onIO(5 * 60 * 1000) { hello() }
                                         return
                                     }
@@ -107,6 +106,7 @@ class Client(
                 }
                 onFailure(call, Exception(response.errorBody()?.toString()))
             }
+
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 helloing = false
                 helloTryedFailed++
@@ -129,7 +129,7 @@ class Client(
     }
 
     fun canPush(): Boolean {
-        return helloSucc && id>0 && RL.clientId.isNotEmpty() && nsr?.state==NetworkStateReceiver.State.AVAILABLE
+        return helloSucc && id > 0 && RL.clientId.isNotEmpty() && nsr?.state == NetworkStateReceiver.State.AVAILABLE
     }
 
 }

@@ -1,8 +1,14 @@
 package ir.am3n.relog
 
+import android.app.Activity
+import android.app.Application
 import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import ir.am3n.needtool.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -11,10 +17,11 @@ class RL {
 
     companion object {
 
-        private var context: Context? = null
+        private var context: Application? = null
         private var logger: Logger? = null
         private var client: Client? = null
 
+        internal var scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         internal var url: String = ""
         internal var appKey: String = ""
         internal var appVersionCode: Long? = null
@@ -63,10 +70,10 @@ class RL {
             }
 
 
-        fun init(context: Context?, url: String, appKey: String, logging: Boolean = false) {
+        fun init(application: Application?, url: String, appKey: String, logging: Boolean = false) {
 
-            this.context = context
-            val device = context?.device()
+            this.context = application
+            val device = application?.device()
             val appVersion = device?.get("appVersion") ?:""
 
             this.url = url
@@ -74,16 +81,14 @@ class RL {
             this.appVersionCode = "\\d*".toRegex().find(appVersion)?.value?.toLongOrNull() ?:0
             this.appVersionName = "\\(.*\\)".toRegex().find(appVersion)?.value?.replace(Regex("[()]"), "") ?:""
             this.osVersion = device?.get("osVersion") ?:""
-            this.debug = context?.isDebug() ?:true
+            this.debug = application?.isDebug() ?:true
 
             this.logging = logging
 
             logger?.stop()
             client?.stop()
-            logger = Logger(context)
-            client = Client(context, device) {
-                logger?.start(context)
-            }
+            logger = Logger(application)
+            client = Client(application, device)
 
         }
 

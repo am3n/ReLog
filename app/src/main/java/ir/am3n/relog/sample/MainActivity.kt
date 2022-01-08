@@ -19,6 +19,14 @@ class MainActivity : AppCompatActivity() {
             RL.e("MainAct", "log in error type")
         }
 
+        /*for (i in 0..50024) {
+            RL.d("MainAct", "log in debug type, log in debug type, log in debug type, log in debug type, " +
+                    "log in debug type, log in debug type, log in debug type, log in debug type, " +
+                    "log in debug type, log in debug type, log in debug type, log in debug type, " +
+                    "log in debug type, log in debug type, log in debug type, log in debug type, " +
+                    "log in debug type, log in debug type, ")
+        }*/
+
     }
 
 }
