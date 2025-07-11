@@ -1,10 +1,10 @@
 package ir.am3n.relog.data.remote
 
 import com.google.gson.GsonBuilder
+import com.google.gson.Strictness
+import ir.am3n.needtool.ResettableLazy
+import ir.am3n.needtool.ResettableLazyManager
 import ir.am3n.relog.RL
-import okhttp3.CipherSuite
-import okhttp3.ConnectionSpec
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -12,7 +12,9 @@ import java.util.concurrent.TimeUnit
 
 internal object Relog {
 
-    internal val api: RelogAPIs by lazy {
+    internal val lazyManager = ResettableLazyManager()
+
+    private val resettableLazy: ResettableLazy<RelogAPIs> = ResettableLazy(lazyManager) {
 
         /*var cipherSuites = ConnectionSpec.MODERN_TLS.cipherSuites()
         if (cipherSuites?.contains(CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA) == false) {
@@ -26,22 +28,24 @@ internal object Relog {
 
         val okHttpClient = OkHttpClient.Builder()
             //.connectionSpecs(listOf(spec, ConnectionSpec.CLEARTEXT))
-            .readTimeout(5, TimeUnit.SECONDS)
-            .writeTimeout(5, TimeUnit.SECONDS)
-            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
             .build()
 
         val gson = GsonBuilder()
-            .setLenient()
+            .setStrictness(Strictness.LENIENT)
             .create()
 
-        return@lazy Retrofit.Builder()
-            .baseUrl(RL.url)
+        return@ResettableLazy Retrofit.Builder()
+            .baseUrl(RL.host)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(RelogAPIs::class.java)
 
     }
+
+    internal val api get() = resettableLazy.lazyHolder.value
 
 }

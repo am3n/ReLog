@@ -5,6 +5,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.util.Log
 import ir.am3n.needtool.*
+import ir.am3n.relog.data.Config
 import ir.am3n.relog.data.remote.HelloRequest
 import ir.am3n.relog.data.remote.Relog
 import okhttp3.ResponseBody
@@ -17,15 +18,6 @@ class Client(
     private val device: HashMap<String, String>?
 ) {
 
-    var id: Long = 0
-        get() {
-            return context?.sh("relog")?.getLong("id", 0) ?: 0
-        }
-        set(value) {
-            field = value
-            context?.sh("relog")?.edit()?.putLong("id", value)?.apply()
-        }
-
     private var nsr: NetworkStateReceiver? = null
     private var helloing = false
     private var helloSucc: Boolean = false
@@ -36,7 +28,7 @@ class Client(
         onIO {
             try {
                 nsr?.stop()
-            } catch (t: Throwable) {
+            } catch (_: Throwable) {
             }
             nsr = NetworkStateReceiver(context, listener = object : NetworkStateReceiver.Listener {
                 override fun onChanged(state: NetworkStateReceiver.State, network: Network?) {
@@ -76,9 +68,17 @@ class Client(
 
     private val hello = Runnable {
 
-        if (RL.logging) Log.d("Relog", "try hello to server")
+        if (RL.debug) Log.d("Relog", "try hello to server")
 
-        val body = HelloRequest(RL.clientId, RL.firebaseToken, RL.identification, RL.extraInfo, RL.debug, device)
+        val body = HelloRequest(
+            RL.clientId,
+            RL.firebaseToken,
+            RL.identification,
+            RL.extraInfo,
+            RL.debug,
+            device
+        )
+
         Relog.api.hello(RL.appKey, body).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 helloing = false
@@ -87,13 +87,13 @@ class Client(
                         response.body()?.string()?.isJsonObj()?.let { json ->
                             if (json.optString("status") == "ok") {
                                 json.optJSONObject("data")?.let { data ->
-                                    RL.setConfig(data.optJSONObject("config"))
-                                    id = data.optLong("cid")
-                                    if (id > 0) {
-                                        if (RL.logging) Log.d("Relog", "hello succeed")
+                                    Config.set(context, data.optJSONObject("config"))
+                                    RL.cid = data.optLong("cid")
+                                    if (RL.cid > 0) {
+                                        if (RL.debug) Log.d("Relog", "hello succeed")
                                         helloSucc = true
                                         helloTryedFailed = 0
-                                        onIO(5 * 60 * 1000) { hello() }
+                                        onIO(30 * 60_000) { hello() } // every 30 minutes
                                         return
                                     }
                                 }
@@ -110,7 +110,7 @@ class Client(
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 helloing = false
                 helloTryedFailed++
-                if (RL.logging) {
+                if (RL.debug) {
                     Log.e("Relog", "hello failed", t)
                 }
                 onIO((if (helloTryedFailed < 3) 2 else 10) * 1000) {
@@ -129,7 +129,12 @@ class Client(
     }
 
     fun canPush(): Boolean {
-        return helloSucc && id > 0 && RL.clientId.isNotEmpty() && nsr?.state == NetworkStateReceiver.State.AVAILABLE
+        return Config.enable
+                && Config.clientEnable
+                && helloSucc
+                && RL.cid > 0
+                && RL.clientId.isNotEmpty()
+                && nsr?.state == NetworkStateReceiver.State.AVAILABLE
     }
 
 }

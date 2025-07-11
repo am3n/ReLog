@@ -2,8 +2,8 @@ package ir.am3n.relog.sample
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.widget.AppCompatButton
 import ir.am3n.relog.RL
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -11,12 +11,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val btn = findViewById<AppCompatButton>(R.id.btn)
         btn?.setOnClickListener {
             RL.d("MainAct", "log in debug type")
-            RL.i("MainAct", "log in info type")
+            /*RL.i("MainAct", "log in info type")
             RL.v("MainAct", "log in verbose type")
             RL.w("MainAct", "log in warning type")
-            RL.e("MainAct", "log in error type")
+            RL.e("MainAct", "log in error type")*/
         }
 
         /*for (i in 0..50024) {

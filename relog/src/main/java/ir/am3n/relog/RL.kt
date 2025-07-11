@@ -1,15 +1,13 @@
 package ir.am3n.relog
 
-import android.app.Activity
 import android.app.Application
-import android.content.Context
-import android.os.Bundle
 import android.util.Log
 import ir.am3n.needtool.*
+import ir.am3n.relog.data.Config
+import ir.am3n.relog.data.remote.Relog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -22,13 +20,21 @@ class RL {
         private var client: Client? = null
 
         internal var scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-        internal var url: String = ""
+        internal var host: String = ""
         internal var appKey: String = ""
         internal var appVersionCode: Long? = null
         internal var appVersionName: String? = null
         internal var osVersion: String? = null
         internal var debug: Boolean = true
-        internal var logging: Boolean = false
+
+        internal var cid: Long = 0
+            get() {
+                return context?.sh("relog")?.getLong("cid", 0) ?: 0
+            }
+            set(value) {
+                field = value
+                context?.sh("relog")?.edit()?.putLong("cid", value)?.apply()
+            }
 
         var clientId: String = ""
             get() {
@@ -41,7 +47,7 @@ class RL {
 
         var firebaseToken: String = ""
             get() {
-                return context?.sh("relog")?.str("firebase_token") ?:""
+                return context?.sh("relog")?.str("firebase_token") ?: ""
             }
             set(value) {
                 field = value
@@ -51,7 +57,7 @@ class RL {
 
         var identification: String = ""
             get() {
-                return context?.sh("relog")?.str("identification") ?:""
+                return context?.sh("relog")?.str("identification") ?: ""
             }
             set(value) {
                 field = value
@@ -61,7 +67,7 @@ class RL {
 
         var extraInfo: String = ""
             get() {
-                return context?.sh("relog")?.str("extra_info") ?:""
+                return context?.sh("relog")?.str("extra_info") ?: ""
             }
             set(value) {
                 field = value
@@ -69,21 +75,44 @@ class RL {
                 client?.hello()
             }
 
+        internal fun canPush(): Boolean {
+            return client?.canPush() ?: false
+        }
 
-        fun init(application: Application?, url: String, appKey: String, logging: Boolean = false) {
+        private val timestamp: String
+            get() {
+                return try {
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS_", Locale.US)
+                        .format(Date()) + System.nanoTime().toString().substring(5)
+                } catch (t: Throwable) {
+                    ""
+                }
+            }
+
+        fun init(
+            application: Application?,
+            host: String,
+            appKey: String,
+            clientId: String? = null
+        ) {
 
             this.context = application
             val device = application?.device()
-            val appVersion = device?.get("appVersion") ?:""
+            val appVersion = device?.get("appVersion") ?: ""
 
-            this.url = url
+            this.host = host
             this.appKey = appKey
-            this.appVersionCode = "\\d*".toRegex().find(appVersion)?.value?.toLongOrNull() ?:0
-            this.appVersionName = "\\(.*\\)".toRegex().find(appVersion)?.value?.replace(Regex("[()]"), "") ?:""
-            this.osVersion = device?.get("osVersion") ?:""
-            this.debug = application?.isDebug() ?:true
+            if (clientId.isNullOrBlank() && this.clientId.isBlank()) {
+                this.clientId = UUID.randomUUID().toString()
+            } else if (!clientId.isNullOrBlank()) {
+                this.clientId = clientId
+            }
+            this.appVersionCode = "\\d*".toRegex().find(appVersion)?.value?.toLongOrNull() ?: 0
+            this.appVersionName = "\\(.*\\)".toRegex().find(appVersion)?.value?.replace(Regex("[()]"), "") ?: ""
+            this.osVersion = device?.get("osVersion") ?: ""
+            this.debug = application?.isDebug() ?: true
 
-            this.logging = logging
+            Config.init(application)
 
             logger?.stop()
             client?.stop()
@@ -92,63 +121,54 @@ class RL {
 
         }
 
-        internal fun canPush(): Boolean {
-            return client?.canPush() ?: false
-        }
-
-        internal val cid: Long? get() = client?.id
-
-        internal fun setConfig(config: JSONObject?) {
-            if (config == null) return
-            logger?.setIndivTypeFilter(context, config.optInt("indiv_type_filter"))
-            logger?.setTypeFilter(context, config.optInt("type_filter"))
-            logger?.setFilterOperator(context, config.optString("filter_operator"))
-            logger?.setKeepLogs(context, config.optInt("keep_logs"))
-        }
-
-        private val timestamp: String get() {
-            return try {
-                SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS_", Locale.US).format(Date()) + System.nanoTime().toString().substring(5)
-            } catch (t: Throwable) {
-                ""
+        fun updateHost(value: String) {
+            if (this.host != value) {
+                this.host = value
+                Relog.lazyManager.reset()
             }
         }
 
-        fun d(tag: String, message: String, relog: Boolean = true) {
+        fun updateAppKey(value: String) {
+            this.appKey = value
+        }
+
+        fun d(tag: String, message: String, androidLog: Boolean = true) {
             logger?.log(timestamp, Type.DEBUG, tag, message)
-            if (relog)
+            if (androidLog)
                 Log.d(tag, message)
         }
 
-        fun i(tag: String, message: String, relog: Boolean = true) {
+        fun i(tag: String, message: String, androidLog: Boolean = true) {
             logger?.log(timestamp, Type.INFO, tag, message)
-            if (relog)
+            if (androidLog)
                 Log.d(tag, message)
         }
 
-        fun v(tag: String, message: String, relog: Boolean = true) {
+        fun v(tag: String, message: String, androidLog: Boolean = true) {
             logger?.log(timestamp, Type.VERBOSE, tag, message)
-            if (relog)
+            if (androidLog)
                 Log.d(tag, message)
         }
 
-        fun w(tag: String, message: String, relog: Boolean = true) {
+        fun w(tag: String, message: String, androidLog: Boolean = true) {
             logger?.log(timestamp, Type.WARN, tag, message)
-            if (relog)
+            if (androidLog)
                 Log.d(tag, message)
         }
 
-        fun e(tag: String, message: String, relog: Boolean = true) {
+        fun e(tag: String, message: String, androidLog: Boolean = true) {
             logger?.log(timestamp, Type.ERROR, tag, message)
-            if (relog)
+            if (androidLog)
                 Log.e(tag, message)
         }
-        fun e(tag: String, throwable: Throwable?, relog: Boolean = true) {
-            e(tag, "", throwable, relog)
+
+        fun e(tag: String, throwable: Throwable?, androidLog: Boolean = true) {
+            e(tag, "", throwable, androidLog)
         }
-        fun e(tag: String, message: String = "", throwable: Throwable?, relog: Boolean = true) {
-            logger?.log(timestamp, Type.ERROR, tag, message+"\n"+Log.getStackTraceString(throwable))
-            if (relog)
+
+        fun e(tag: String, message: String = "", throwable: Throwable?, androidLog: Boolean = true) {
+            logger?.log(timestamp, Type.ERROR, tag, message + "\n" + Log.getStackTraceString(throwable))
+            if (androidLog)
                 Log.e(tag, message, throwable)
         }
 

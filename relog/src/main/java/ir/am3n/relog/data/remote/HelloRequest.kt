@@ -59,7 +59,10 @@ data class HelloRequest(
 
 ) {
 
-    constructor(clientId: String, firebaseToken: String, identification: String, extraInfo: String, debug: Boolean, device: HashMap<String, String>?) : this(
+    constructor(
+        clientId: String, firebaseToken: String, identification: String, extraInfo: String,
+        debug: Boolean, device: HashMap<String, String>?
+    ) : this(
         clientId,
         firebaseToken,
         identification,
