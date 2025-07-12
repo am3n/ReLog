@@ -1,20 +1,19 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-android'
-    id 'kotlin-parcelize'
+    id 'kotlin-android-extensions'
+    id 'kotlin-kapt'
 }
 
 android {
 
+    compileSdk 34
     namespace 'ir.am3n.relog.sample'
-
-    compileSdk 35
 
     defaultConfig {
         applicationId "ir.am3n.relog.sample"
         minSdk 21
-        targetSdk 35
+        targetSdk 34
         multiDexEnabled true
     }
 
@@ -38,29 +37,18 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/LICENSE.md'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/NOTICE.md'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/ASL2.0'
-    }
-
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.16.0'
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.multidex:multidex:2.0.1'
-    implementation "androidx.constraintlayout:constraintlayout:2.2.1"
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.20"
+
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
+    kapt 'androidx.room:room-compiler:2.6.1'
 
     implementation 'com.github.am3n:NeedTool:4.10.0'
 

@@ -1,7 +1,6 @@
 package ir.am3n.relog.data.remote
 
 import com.google.gson.GsonBuilder
-import com.google.gson.Strictness
 import ir.am3n.needtool.ResettableLazy
 import ir.am3n.needtool.ResettableLazyManager
 import ir.am3n.relog.RL
@@ -34,7 +33,7 @@ internal object Relog {
             .build()
 
         val gson = GsonBuilder()
-            .setStrictness(Strictness.LENIENT)
+            .setLenient()
             .create()
 
         return@ResettableLazy Retrofit.Builder()
