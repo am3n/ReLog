@@ -1,11 +1,11 @@
 package ir.am3n.relog.data.local.db
 
+import androidx.annotation.Keep
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 
+@Keep
 @Database(
     entities = [
         Log::class

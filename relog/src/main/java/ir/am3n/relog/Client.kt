@@ -7,7 +7,7 @@ import android.util.Log
 import ir.am3n.needtool.*
 import ir.am3n.relog.data.Config
 import ir.am3n.relog.data.remote.HelloRequest
-import ir.am3n.relog.data.remote.Relog
+import ir.am3n.relog.data.remote.Remote
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -79,7 +79,7 @@ class Client(
             device
         )
 
-        Relog.api.hello(RL.appKey, body).enqueue(object : Callback<ResponseBody> {
+        Remote.api.hello(RL.appKey, body).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 helloing = false
                 if (response.isSuccessful) {

@@ -9,7 +9,7 @@ import ir.am3n.relog.data.Config
 import ir.am3n.relog.data.local.db.Log
 import ir.am3n.relog.data.local.db.LogDatabase
 import ir.am3n.relog.data.remote.PushRequest
-import ir.am3n.relog.data.remote.Relog
+import ir.am3n.relog.data.remote.Remote
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -75,7 +75,7 @@ internal class Logger(application: Application?) : Application.ActivityLifecycle
                         val logsCanPush = logs.filter { canLog(it.type) }
                         val body = PushRequest(RL.cid, logsCanPush)
                         if (RL.debug) android.util.Log.d("Relog", "pushing logs size=${body.logs?.size}")
-                        Relog.api.push(RL.appKey, body).enqueue(object : Callback<ResponseBody?> {
+                        Remote.api.push(RL.appKey, body).enqueue(object : Callback<ResponseBody?> {
                             override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                                 lastPush = Now
                                 if (response.isSuccessful) {
@@ -85,7 +85,7 @@ internal class Logger(application: Application?) : Application.ActivityLifecycle
                                         if (responseJson?.optString("status") == "ok") {
                                             onIO {
                                                 try {
-                                                    database!!.logDao()!!.delete(logs)
+                                                    database!!.logDao()!!.deleteSync(logs)
                                                     if (RL.debug) android.util.Log.d("Relog", "push succeed")
                                                 } catch (t: Throwable) {
                                                     if (RL.debug) android.util.Log.e("Relog", "", t)

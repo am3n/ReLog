@@ -9,11 +9,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-internal object Relog {
+internal object Remote {
 
     internal val lazyManager = ResettableLazyManager()
 
-    private val resettableLazy: ResettableLazy<RelogAPIs> = ResettableLazy(lazyManager) {
+    private val resettableLazy: ResettableLazy<APIs> = ResettableLazy(lazyManager) {
 
         /*var cipherSuites = ConnectionSpec.MODERN_TLS.cipherSuites()
         if (cipherSuites?.contains(CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA) == false) {
@@ -41,7 +41,7 @@ internal object Relog {
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
-            .create(RelogAPIs::class.java)
+            .create(APIs::class.java)
 
     }
 

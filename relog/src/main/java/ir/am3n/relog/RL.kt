@@ -4,7 +4,7 @@ import android.app.Application
 import android.util.Log
 import ir.am3n.needtool.*
 import ir.am3n.relog.data.Config
-import ir.am3n.relog.data.remote.Relog
+import ir.am3n.relog.data.remote.Remote
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -124,7 +124,7 @@ class RL {
         fun updateHost(value: String) {
             if (this.host != value) {
                 this.host = value
-                Relog.lazyManager.reset()
+                Remote.lazyManager.reset()
             }
         }
 

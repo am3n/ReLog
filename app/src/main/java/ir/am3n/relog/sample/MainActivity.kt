@@ -11,9 +11,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        RL.d("MainAct", "onCreate")
+
         val btn = findViewById<AppCompatButton>(R.id.btn)
         btn?.setOnClickListener {
-            RL.d("MainAct", "log in debug type")
+            RL.d("MainAct", "button click")
             /*RL.i("MainAct", "log in info type")
             RL.v("MainAct", "log in verbose type")
             RL.w("MainAct", "log in warning type")
@@ -28,6 +30,11 @@ class MainActivity : AppCompatActivity() {
                     "log in debug type, log in debug type, ")
         }*/
 
+    }
+
+    override fun onStop() {
+        super.onStop()
+        RL.d("MainAct", "onStop")
     }
 
 }
